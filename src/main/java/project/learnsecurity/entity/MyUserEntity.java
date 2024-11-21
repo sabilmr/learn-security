@@ -5,9 +5,9 @@ import lombok.Getter;
 import lombok.Setter;
 import project.learnsecurity.util.CommonUtil;
 
-@Entity
 @Getter
 @Setter
+@Entity
 public class MyUserEntity {
     @Id
     private String id;

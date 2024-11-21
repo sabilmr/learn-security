@@ -1,4 +1,4 @@
-package project.learnsecurity.controller;
+package project.learnsecurity.controller.v1;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

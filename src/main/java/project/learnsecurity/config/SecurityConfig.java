@@ -1,11 +1,11 @@
 package project.learnsecurity.config;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -18,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import project.learnsecurity.service.MyUserDetailService;
 
 @Configuration
@@ -26,20 +27,27 @@ import project.learnsecurity.service.MyUserDetailService;
 public class SecurityConfig {
 
     private final MyUserDetailService userDetailService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(register -> {
-                    register.requestMatchers("/home", "/register/**").permitAll();
+                    //versi 1
+//                  register.requestMatchers("/home", "/register/**").permitAll();
+                    //versi 2
+                    register.requestMatchers("/v2/home", "/register/**", "/authenticate").permitAll();
                     register.requestMatchers("/admin/").hasRole("ADMIN");
                     register.requestMatchers("/user/").hasRole("USER");
                     register.anyRequest().authenticated();
                 })
-                .formLogin(httpSecurityFormLoginConfigurer -> {
-                    httpSecurityFormLoginConfigurer.loginPage("/login").permitAll();
-                })
+                //versi 1
+//                .formLogin(httpSecurityFormLoginConfigurer -> {
+//                    httpSecurityFormLoginConfigurer.loginPage("/login").permitAll();
+                //versi 2
+                .formLogin(AbstractAuthenticationFilterConfigurer::permitAll)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
@@ -69,6 +77,11 @@ public class SecurityConfig {
         authProvider.setUserDetailsService(userDetailService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        return new ProviderManager(authenticationProvider());
     }
 
     @Bean
